@@ -8,20 +8,24 @@ interface App {
     height: number
     miners: Miner[]
     asteroids: Asteroid[]
+    stations: Station[]
     tEnd: number
     tDelta: number
 }
 
-interface Asteroid {
+interface Entity {
     position: Vector2
 }
 
-interface Miner {
-    position: Vector2
+interface Miner extends Entity {
     angle: number
     speed: number
     target: Vector2 | null
 }
+
+interface Asteroid extends Entity {}
+
+interface Station extends Entity {}
 
 const tmp = new Vector2(0, 0)
 
@@ -36,7 +40,6 @@ const create = (): App => {
     const height = window.innerHeight
     canvas.width = width
     canvas.height = height
-
     document.body.appendChild(canvas)
 
     return {
@@ -47,6 +50,7 @@ const create = (): App => {
         height,
         miners: [],
         asteroids: [],
+        stations: [],
         tEnd: Date.now(),
         tDelta: 0,
     }
@@ -70,6 +74,10 @@ const load = (app: App) => {
 
     app.asteroids.push({
         position: asteroidPos,
+    })
+
+    app.stations.push({
+        position: new Vector2(500, 500),
     })
 }
 
@@ -123,6 +131,34 @@ const createAsteroidTexture = () => {
     return canvas
 }
 
+const createStationTexture = () => {
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+        throw new Error("Could not get 2d context")
+    }
+
+    const width = 32
+    const height = 32
+    canvas.width = width
+    canvas.height = height
+
+    ctx.fillStyle = "orange"
+    ctx.strokeStyle = "#000"
+    ctx.lineWidth = 2
+
+    ctx.beginPath()
+    ctx.moveTo(2, 2)
+    ctx.lineTo(width - 2, 2)
+    ctx.lineTo(width - 2, height - 2)
+    ctx.lineTo(2, height - 2)
+    ctx.closePath()
+    ctx.stroke()
+    ctx.fill()
+
+    return canvas
+}
+
 const render = (app: App) => {
     const tNow = Date.now()
     app.tDelta = (tNow - app.tEnd) / 1000
@@ -131,7 +167,8 @@ const render = (app: App) => {
     app.ctx.fillStyle = "#d6d6d6"
     app.ctx.fillRect(0, 0, app.width, app.height)
 
-    renderAsteroids(app)
+    renderEntities(app, app.asteroids, app.textures.asteroid)
+    renderEntities(app, app.stations, app.textures.station)
 
     updateMiners(app)
     renderMiners(app)
@@ -152,8 +189,6 @@ const updateMiners = (app: App) => {
 
         if (length <= speed) {
             miner.position.set(miner.target.x, miner.target.y)
-
-            console.log(miner.position)
             miner.target = null
             continue
         }
@@ -181,17 +216,19 @@ const renderMiners = (app: App) => {
     }
 }
 
-const renderAsteroids = (app: App) => {
-    const asteroidTexture = app.textures.asteroid
-
-    for (const asteroid of app.asteroids) {
-        const halfWidth = asteroidTexture.width * 0.5
-        const halfHeight = asteroidTexture.height * 0.5
+const renderEntities = <T extends Entity>(
+    app: App,
+    entities: Array<T>,
+    texture: HTMLCanvasElement
+) => {
+    for (const entity of entities) {
+        const halfWidth = texture.width * 0.5
+        const halfHeight = texture.height * 0.5
 
         app.ctx.drawImage(
-            asteroidTexture,
-            asteroid.position.x - halfWidth,
-            asteroid.position.y - halfHeight
+            texture,
+            entity.position.x - halfWidth,
+            entity.position.y - halfHeight
         )
     }
 }
@@ -202,6 +239,7 @@ try {
 
     app.textures.miner = createMinerTexture()
     app.textures.asteroid = createAsteroidTexture()
+    app.textures.station = createStationTexture()
 
     const renderFunc = () => {
         render(app)
