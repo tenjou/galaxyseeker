@@ -1,0 +1,52 @@
+{
+    "name": "galaxyseeker",
+    "version": "1.0.0",
+    "description": "",
+    "main": "webpack.dev.js",
+    "scripts": {
+        "dev": "webpack-dev-server --config webpack.dev.js --port 4050",
+        "build": "webpack --config webpack.prod.js"
+    },
+    "keywords": [],
+    "author": "Arturs Šefers",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/lodash": "^4.14.165",
+        "@types/react": "^16.9.56",
+        "@types/react-dom": "^16.9.9",
+        "@types/react-redux": "^7.1.16",
+        "@types/react-router-dom": "^5.1.6",
+        "@types/styled-components": "^5.1.7",
+        "file-loader": "^6.2.0",
+        "html-webpack-plugin": "^4.5.0",
+        "ts-loader": "^8.0.14",
+        "typescript": "^4.1.2",
+        "webpack": "^4.44.2",
+        "webpack-cli": "^3.3.12",
+        "webpack-dev-server": "^3.11.0",
+        "webpack-merge": "^5.7.3"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^1.2.32",
+        "@fortawesome/free-solid-svg-icons": "^5.15.1",
+        "@fortawesome/react-fontawesome": "^0.1.14",
+        "@reduxjs/toolkit": "^1.4.0",
+        "copy-webpack-plugin": "6.3.2",
+        "css-loader": "^5.0.1",
+        "dotenv-webpack": "^6.0.0",
+        "html-loader": "^1.3.2",
+        "joi": "^17.3.0",
+        "lodash": "^4.17.20",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1",
+        "react-redux": "^7.2.2",
+        "react-router-dom": "^5.2.0",
+        "redux": "^4.0.5",
+        "style-loader": "^2.0.0",
+        "styled-components": "^5.2.1",
+        "typescript-plugin-styled-components": "^1.4.4"
+    },
+    "resolutions": {
+        "styled-components": "^5"
+    }
+}
