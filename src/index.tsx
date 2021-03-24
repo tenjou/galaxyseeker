@@ -69,7 +69,7 @@ const load = (app: App) => {
         cargoCapacity: 0,
         cargoCapacityMax: 100,
         tMiningLaserCooldown: 0,
-        tMiningLaserVisible: 0,
+        tMiningFinishing: 0,
         ai: {
             state: "idle",
             target: null,
@@ -84,7 +84,7 @@ const load = (app: App) => {
         cargoCapacity: 0,
         cargoCapacityMax: 100,
         tMiningLaserCooldown: 0,
-        tMiningLaserVisible: 0,
+        tMiningFinishing: 0,
         ai: {
             state: "idle",
             target: null,
@@ -252,12 +252,19 @@ const updateMinerAI = (app: App, miner: Miner) => {
         }
 
         case "mining": {
-            if (app.tCurrent < miner.tMiningLaserCooldown) {
+            if (miner.tMiningLaserCooldown > app.tCurrent) {
+                if (
+                    miner.tMiningFinishing > 0 &&
+                    miner.tMiningFinishing <= app.tCurrent
+                ) {
+                    miner.tMiningFinishing = 0
+                    console.log("get-ore")
+                }
                 return
             }
 
             miner.tMiningLaserCooldown = app.tCurrent + 4000
-            miner.tMiningLaserVisible = app.tCurrent + 2000
+            miner.tMiningFinishing = app.tCurrent + 2000
             break
         }
     }
@@ -317,7 +324,11 @@ const renderMiners = (app: App) => {
         )
         app.ctx.setTransform(1, 0, 0, 1, 0, 0)
 
-        if (miner.ai.target && miner.tMiningLaserVisible > app.tCurrent) {
+        if (
+            miner.ai.target &&
+            miner.tMiningFinishing > 0 &&
+            miner.tMiningFinishing > app.tCurrent
+        ) {
             app.ctx.strokeStyle = "orange"
             app.ctx.lineWidth = 2
 
