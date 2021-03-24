@@ -7,11 +7,6 @@ export enum EntityType {
     Station,
 }
 
-export type Entity = {
-    type: EntityType
-    position: Vector2
-}
-
 export type MinerAIState =
     | "idle"
     | "search-asteroid"
@@ -20,8 +15,9 @@ export type MinerAIState =
 
 export type AsteroidEvent = "destroyed"
 
-export type Miner = Entity & {
+export type Miner = {
     type: EntityType.Miner
+    position: Vector2
     angle: number
     speed: number
     cargoCapacity: number
@@ -35,13 +31,17 @@ export type Miner = Entity & {
     }
 }
 
-export type Asteroid = Entity & {
+export type Asteroid = {
     type: EntityType.Asteroid
+    position: Vector2
     miners: Miner[]
     oreAmount: number
     oreAmountMax: number
 }
 
-export type Station = Entity & {
+export type Station = {
     type: EntityType.Station
+    position: Vector2
 }
+
+export type Entity = Miner | Asteroid | Station

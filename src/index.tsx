@@ -1,37 +1,9 @@
-import type { Asteroid, Entity, Miner, Station } from "./entity"
+import { App } from "./app"
+import type { Entity } from "./entity"
 import { EntityType } from "./entity"
 import { Vector2 } from "./math/Vector2"
+import { updateMiners } from "./miner"
 import { randomNumber } from "./utils"
-
-interface App {
-    canvas: HTMLElement
-    ctx: CanvasRenderingContext2D
-    textures: Record<string, HTMLCanvasElement>
-    width: number
-    height: number
-    miners: Miner[]
-    asteroids: Asteroid[]
-    stations: Station[]
-    tCurrent: number
-    tEnd: number
-    tDelta: number
-}
-
-const tmp = new Vector2(0, 0)
-
-// const subscribe = (subscribers: Entity[], from: Entity) => {
-//     subscribers.push(from)
-// }
-
-// const unsubscribe = (subscribers: Entity[], from: Entity) => {
-//     const index = subscribers.indexOf(from)
-//     if (index === -1) {
-//         return
-//     }
-
-//     subscribers[index] = subscribers[subscribers.length - 1]
-//     subscribers.pop()
-// }
 
 const create = (): App => {
     const canvas = document.createElement("canvas")
@@ -77,21 +49,21 @@ const load = (app: App) => {
             targetPosition: new Vector2(0, 0),
         },
     })
-    app.miners.push({
-        type: EntityType.Miner,
-        position: new Vector2(250, 750),
-        angle: 0,
-        speed: 60,
-        cargoCapacity: 0,
-        cargoCapacityMax: 100,
-        tMiningLaserCooldown: 0,
-        tMiningFinishing: 0,
-        ai: {
-            state: "idle",
-            target: null,
-            targetPosition: new Vector2(0, 0),
-        },
-    })
+    // app.miners.push({
+    //     type: EntityType.Miner,
+    //     position: new Vector2(250, 750),
+    //     angle: 0,
+    //     speed: 60,
+    //     cargoCapacity: 0,
+    //     cargoCapacityMax: 100,
+    //     tMiningLaserCooldown: 0,
+    //     tMiningFinishing: 0,
+    //     ai: {
+    //         state: "idle",
+    //         target: null,
+    //         targetPosition: new Vector2(0, 0),
+    //     },
+    // })
 
     for (let n = 0; n < 10; n++) {
         const x = randomNumber(0, 1000)
@@ -203,108 +175,6 @@ const render = (app: App) => {
     renderMiners(app)
 
     app.tEnd = app.tCurrent
-}
-
-const updateMiners = (app: App) => {
-    for (const miner of app.miners) {
-        updateMinerAI(app, miner)
-    }
-}
-
-const updateMinerAI = (app: App, miner: Miner) => {
-    switch (miner.ai.state) {
-        case "idle":
-            miner.ai.state = "search-asteroid"
-            break
-
-        case "search-asteroid": {
-            const asteroid = searchClosestAsteroid(app, miner)
-            if (!asteroid) {
-                miner.ai.state = "idle"
-                return
-            }
-
-            tmp.set(
-                asteroid.position.x - miner.position.x,
-                asteroid.position.y - miner.position.y
-            )
-            const length = tmp.length() - 30
-            tmp.normalize()
-
-            miner.ai.state = "fly-to-target"
-            miner.ai.target = asteroid
-            miner.ai.targetPosition.set(
-                miner.position.x + tmp.x * length,
-                miner.position.y + tmp.y * length
-            )
-            break
-        }
-
-        case "fly-to-target": {
-            if (!updateMinerFlyToTarget(app, miner)) {
-                return
-            }
-
-            miner.ai.state = "mining"
-            break
-        }
-
-        case "mining": {
-            if (miner.tMiningLaserCooldown > app.tCurrent) {
-                if (
-                    miner.tMiningFinishing > 0 &&
-                    miner.tMiningFinishing <= app.tCurrent
-                ) {
-                    miner.tMiningFinishing = 0
-                    console.log("get-ore")
-                }
-                return
-            }
-
-            miner.tMiningLaserCooldown = app.tCurrent + 4000
-            miner.tMiningFinishing = app.tCurrent + 2000
-            break
-        }
-    }
-}
-
-const updateMinerFlyToTarget = (app: App, miner: Miner) => {
-    const targetPosition = miner.ai.targetPosition
-
-    tmp.set(
-        targetPosition.x - miner.position.x,
-        targetPosition.y - miner.position.y
-    )
-    const length = tmp.length()
-    const speed = miner.speed * app.tDelta
-
-    if (length <= speed) {
-        miner.position.set(targetPosition.x, targetPosition.y)
-        return true
-    }
-
-    tmp.normalize()
-    miner.position.add(tmp.x * speed, tmp.y * speed)
-    miner.angle = Math.atan2(tmp.x, -tmp.y)
-    return false
-}
-
-const searchClosestAsteroid = (app: App, miner: Miner): Asteroid | null => {
-    let closestDistance: number = Number.MAX_SAFE_INTEGER
-    let closestAsteroid: Asteroid | null = null
-
-    for (const asteroid of app.asteroids) {
-        const distance = miner.position.distance(
-            asteroid.position.x,
-            asteroid.position.y
-        )
-        if (distance < closestDistance) {
-            closestDistance = distance
-            closestAsteroid = asteroid
-        }
-    }
-
-    return closestAsteroid
 }
 
 const renderMiners = (app: App) => {

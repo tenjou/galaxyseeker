@@ -1,4 +1,116 @@
-import type { Asteroid, AsteroidEvent, Miner } from "./entity"
+import type { App } from "./app"
+import { subscribe, unsubscribe } from "./app"
+import { Asteroid, AsteroidEvent, EntityType, Miner } from "./entity"
+import { Vector2 } from "./math/Vector2"
+import { mineAsteroid } from "./asteroid"
+
+const tmp = new Vector2(0, 0)
+
+export const updateMiners = (app: App) => {
+    for (const miner of app.miners) {
+        updateMinerAI(app, miner)
+    }
+}
+
+const updateMinerAI = (app: App, miner: Miner) => {
+    switch (miner.ai.state) {
+        case "idle":
+            miner.ai.state = "search-asteroid"
+            break
+
+        case "search-asteroid": {
+            const asteroid = searchClosestAsteroid(app, miner)
+            if (!asteroid) {
+                miner.ai.state = "idle"
+                return
+            }
+
+            tmp.set(
+                asteroid.position.x - miner.position.x,
+                asteroid.position.y - miner.position.y
+            )
+            const length = tmp.length() - 30
+            tmp.normalize()
+
+            miner.ai.state = "fly-to-target"
+            miner.ai.target = asteroid
+            miner.ai.targetPosition.set(
+                miner.position.x + tmp.x * length,
+                miner.position.y + tmp.y * length
+            )
+            subscribe(asteroid.miners, miner)
+            break
+        }
+
+        case "fly-to-target": {
+            if (!updateMinerFlyToTarget(app, miner)) {
+                return
+            }
+
+            miner.ai.state = "mining"
+            break
+        }
+
+        case "mining": {
+            if (miner.tMiningLaserCooldown > app.tCurrent) {
+                if (
+                    miner.tMiningFinishing > 0 &&
+                    miner.tMiningFinishing <= app.tCurrent
+                ) {
+                    miner.tMiningFinishing = 0
+
+                    if (miner.ai.target?.type === EntityType.Asteroid) {
+                        mineAsteroid(app, miner.ai.target, miner)
+                    }
+                }
+                return
+            }
+
+            miner.tMiningLaserCooldown = app.tCurrent + 4000
+            miner.tMiningFinishing = app.tCurrent + 2000
+            break
+        }
+    }
+}
+
+const updateMinerFlyToTarget = (app: App, miner: Miner) => {
+    const targetPosition = miner.ai.targetPosition
+
+    tmp.set(
+        targetPosition.x - miner.position.x,
+        targetPosition.y - miner.position.y
+    )
+    const length = tmp.length()
+    const speed = miner.speed * app.tDelta
+
+    if (length <= speed) {
+        miner.position.set(targetPosition.x, targetPosition.y)
+        return true
+    }
+
+    tmp.normalize()
+    miner.position.add(tmp.x * speed, tmp.y * speed)
+    miner.angle = Math.atan2(tmp.x, -tmp.y)
+    return false
+}
+
+const searchClosestAsteroid = (app: App, miner: Miner): Asteroid | null => {
+    let closestDistance: number = Number.MAX_SAFE_INTEGER
+    let closestAsteroid: Asteroid | null = null
+
+    for (const asteroid of app.asteroids) {
+        const distance = miner.position.distance(
+            asteroid.position.x,
+            asteroid.position.y
+        )
+        if (distance < closestDistance) {
+            closestDistance = distance
+            closestAsteroid = asteroid
+        }
+    }
+
+    return closestAsteroid
+}
 
 export const handleAsteroidEvent = (
     asteroid: Asteroid,
@@ -7,6 +119,7 @@ export const handleAsteroidEvent = (
 ) => {
     switch (asteroidEvent) {
         case "destroyed":
+            miner.ai.state = "idle"
             break
     }
 }
