@@ -17,10 +17,17 @@ interface Entity {
     position: Vector2
 }
 
+type MinerAIState = "idle" | "search-asteroid" | "fly-to-target"
+
 interface Miner extends Entity {
     angle: number
     speed: number
-    target: Vector2 | null
+    target: Vector2
+    cargoCapacity: number
+    cargoCapacityMax: number
+    ai: {
+        state: MinerAIState
+    }
 }
 
 interface Asteroid extends Entity {}
@@ -57,23 +64,34 @@ const create = (): App => {
 }
 
 const load = (app: App) => {
-    const asteroidPos = new Vector2(200, 250)
-
     app.miners.push({
         position: new Vector2(100, 100),
         angle: 0,
-        speed: 100,
-        target: asteroidPos,
+        speed: 60,
+        target: new Vector2(0, 0),
+        cargoCapacity: 0,
+        cargoCapacityMax: 100,
+        ai: {
+            state: "idle",
+        },
     })
     app.miners.push({
         position: new Vector2(250, 750),
         angle: 0,
-        speed: 100,
-        target: asteroidPos,
+        speed: 60,
+        target: new Vector2(0, 0),
+        cargoCapacity: 0,
+        cargoCapacityMax: 100,
+        ai: {
+            state: "idle",
+        },
     })
 
     app.asteroids.push({
-        position: asteroidPos,
+        position: new Vector2(200, 250),
+    })
+    app.asteroids.push({
+        position: new Vector2(300, 550),
     })
 
     app.stations.push({
@@ -176,27 +194,70 @@ const render = (app: App) => {
 
 const updateMiners = (app: App) => {
     for (const miner of app.miners) {
-        if (!miner.target) {
-            continue
-        }
-
-        tmp.set(
-            miner.target.x - miner.position.x,
-            miner.target.y - miner.position.y
-        )
-        const length = tmp.length()
-        const speed = miner.speed * app.tDelta
-
-        if (length <= speed) {
-            miner.position.set(miner.target.x, miner.target.y)
-            miner.target = null
-            continue
-        }
-
-        tmp.normalize()
-        miner.position.add(tmp.x * speed, tmp.y * speed)
-        miner.angle = Math.atan2(tmp.x, -tmp.y)
+        updateMinerAI(app, miner)
     }
+}
+
+const updateMinerAI = (app: App, miner: Miner) => {
+    switch (miner.ai.state) {
+        case "idle":
+            miner.ai.state = "search-asteroid"
+            break
+
+        case "search-asteroid": {
+            const asteroid = searchClosestAsteroid(app, miner)
+            if (!asteroid) {
+                miner.ai.state = "idle"
+                return
+            }
+
+            miner.ai.state = "fly-to-target"
+            miner.target.copy(asteroid.position)
+            break
+        }
+
+        case "fly-to-target": {
+            updateMinerFlyToTarget(app, miner)
+            break
+        }
+    }
+}
+
+const updateMinerFlyToTarget = (app: App, miner: Miner) => {
+    tmp.set(
+        miner.target.x - miner.position.x,
+        miner.target.y - miner.position.y
+    )
+    const length = tmp.length()
+    const speed = miner.speed * app.tDelta
+
+    if (length <= speed) {
+        miner.position.set(miner.target.x, miner.target.y)
+        return false
+    }
+
+    tmp.normalize()
+    miner.position.add(tmp.x * speed, tmp.y * speed)
+    miner.angle = Math.atan2(tmp.x, -tmp.y)
+    return true
+}
+
+const searchClosestAsteroid = (app: App, miner: Miner): Asteroid | null => {
+    let closestDistance: number = Number.MAX_SAFE_INTEGER
+    let closestAsteroid: Asteroid | null = null
+
+    for (const asteroid of app.asteroids) {
+        const distance = miner.position.distance(
+            asteroid.position.x,
+            asteroid.position.y
+        )
+        if (distance < closestDistance) {
+            closestDistance = distance
+            closestAsteroid = asteroid
+        }
+    }
+
+    return closestAsteroid
 }
 
 const renderMiners = (app: App) => {
