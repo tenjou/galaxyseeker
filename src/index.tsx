@@ -211,8 +211,18 @@ const updateMinerAI = (app: App, miner: Miner) => {
                 return
             }
 
+            tmp.set(
+                asteroid.position.x - miner.position.x,
+                asteroid.position.y - miner.position.y
+            )
+            const length = tmp.length() - 30
+            tmp.normalize()
+
             miner.ai.state = "fly-to-target"
-            miner.target.copy(asteroid.position)
+            miner.target.set(
+                miner.position.x + tmp.x * length,
+                miner.position.y + tmp.y * length
+            )
             break
         }
 
