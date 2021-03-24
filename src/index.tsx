@@ -1,4 +1,5 @@
 import { Vector2 } from "./math/Vector2"
+import { Entity, Miner, Asteroid, Station, EntityType } from "./entity"
 
 interface App {
     canvas: HTMLElement
@@ -14,62 +15,21 @@ interface App {
     tDelta: number
 }
 
-enum EntityType {
-    Unknown,
-    Miner,
-    Asteroid,
-    Station,
-}
-
-type Entity = {
-    type: EntityType
-    position: Vector2
-}
-
-type MinerAIState = "idle" | "search-asteroid" | "fly-to-target" | "mining"
-
-type AsteroidEvent = "destroyed"
-
-type Miner = Entity & {
-    type: EntityType.Miner
-    angle: number
-    speed: number
-    cargoCapacity: number
-    cargoCapacityMax: number
-    miningLaserCooldown: number
-    ai: {
-        state: MinerAIState
-        target: Entity | null
-        targetPosition: Vector2
-    }
-}
-
-type Asteroid = Entity & {
-    type: EntityType.Asteroid
-    miners: Miner[]
-    oreAmount: number
-    oreAmountMax: number
-}
-
-type Station = Entity & {
-    type: EntityType.Station
-}
-
 const tmp = new Vector2(0, 0)
 
-const subscribe = (subscribers: Entity[], from: Entity) => {
-    subscribers.push(from)
-}
+// const subscribe = (subscribers: Entity[], from: Entity) => {
+//     subscribers.push(from)
+// }
 
-const unsubscribe = (subscribers: Entity[], from: Entity) => {
-    const index = subscribers.indexOf(from)
-    if (index === -1) {
-        return
-    }
+// const unsubscribe = (subscribers: Entity[], from: Entity) => {
+//     const index = subscribers.indexOf(from)
+//     if (index === -1) {
+//         return
+//     }
 
-    subscribers[index] = subscribers[subscribers.length - 1]
-    subscribers.pop()
-}
+//     subscribers[index] = subscribers[subscribers.length - 1]
+//     subscribers.pop()
+// }
 
 const create = (): App => {
     const canvas = document.createElement("canvas")
@@ -299,17 +259,6 @@ const updateMinerAI = (app: App, miner: Miner) => {
     }
 }
 
-const handleAsteroidEvent = (
-    asteroid: Asteroid,
-    entity: Entity,
-    asteroidEvent: AsteroidEvent
-) => {
-    switch (entity.type) {
-        case EntityType.Miner:
-            break
-    }
-}
-
 const updateMinerFlyToTarget = (app: App, miner: Miner) => {
     const targetPosition = miner.ai.targetPosition
 
@@ -363,6 +312,19 @@ const renderMiners = (app: App) => {
             miner.position.y - minerTexture.height * 0.5
         )
         app.ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+        if (miner.ai.target) {
+            app.ctx.strokeStyle = "orange"
+            app.ctx.lineWidth = 2
+
+            app.ctx.beginPath()
+            app.ctx.moveTo(miner.position.x, miner.position.y)
+            app.ctx.lineTo(
+                miner.ai.target.position.x,
+                miner.ai.target.position.y
+            )
+            app.ctx.stroke()
+        }
     }
 }
 
