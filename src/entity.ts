@@ -26,7 +26,8 @@ export type Miner = Entity & {
     speed: number
     cargoCapacity: number
     cargoCapacityMax: number
-    miningLaserCooldown: number
+    tMiningLaserCooldown: number
+    tMiningLaserVisible: number
     ai: {
         state: MinerAIState
         target: Entity | null

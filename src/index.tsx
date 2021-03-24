@@ -1,5 +1,6 @@
+import type { Asteroid, Entity, Miner, Station } from "./entity"
+import { EntityType } from "./entity"
 import { Vector2 } from "./math/Vector2"
-import { Entity, Miner, Asteroid, Station, EntityType } from "./entity"
 
 interface App {
     canvas: HTMLElement
@@ -67,7 +68,8 @@ const load = (app: App) => {
         speed: 60,
         cargoCapacity: 0,
         cargoCapacityMax: 100,
-        miningLaserCooldown: 0,
+        tMiningLaserCooldown: 0,
+        tMiningLaserVisible: 0,
         ai: {
             state: "idle",
             target: null,
@@ -81,7 +83,8 @@ const load = (app: App) => {
         speed: 60,
         cargoCapacity: 0,
         cargoCapacityMax: 100,
-        miningLaserCooldown: 0,
+        tMiningLaserCooldown: 0,
+        tMiningLaserVisible: 0,
         ai: {
             state: "idle",
             target: null,
@@ -249,11 +252,12 @@ const updateMinerAI = (app: App, miner: Miner) => {
         }
 
         case "mining": {
-            if (app.tCurrent < miner.miningLaserCooldown) {
+            if (app.tCurrent < miner.tMiningLaserCooldown) {
                 return
             }
 
-            miner.miningLaserCooldown = app.tCurrent + 3000
+            miner.tMiningLaserCooldown = app.tCurrent + 4000
+            miner.tMiningLaserVisible = app.tCurrent + 2000
             break
         }
     }
@@ -313,7 +317,7 @@ const renderMiners = (app: App) => {
         )
         app.ctx.setTransform(1, 0, 0, 1, 0, 0)
 
-        if (miner.ai.target) {
+        if (miner.ai.target && miner.tMiningLaserVisible > app.tCurrent) {
             app.ctx.strokeStyle = "orange"
             app.ctx.lineWidth = 2
 
