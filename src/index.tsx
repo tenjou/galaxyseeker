@@ -1,6 +1,7 @@
 import type { Asteroid, Entity, Miner, Station } from "./entity"
 import { EntityType } from "./entity"
 import { Vector2 } from "./math/Vector2"
+import { randomNumber } from "./utils"
 
 interface App {
     canvas: HTMLElement
@@ -92,20 +93,17 @@ const load = (app: App) => {
         },
     })
 
-    app.asteroids.push({
-        type: EntityType.Asteroid,
-        position: new Vector2(200, 250),
-        miners: [],
-        oreAmount: 50,
-        oreAmountMax: 50,
-    })
-    app.asteroids.push({
-        type: EntityType.Asteroid,
-        position: new Vector2(300, 550),
-        miners: [],
-        oreAmount: 50,
-        oreAmountMax: 50,
-    })
+    for (let n = 0; n < 10; n++) {
+        const x = randomNumber(0, 1000)
+        const y = randomNumber(0, 900)
+        app.asteroids.push({
+            type: EntityType.Asteroid,
+            position: new Vector2(x, y),
+            miners: [],
+            oreAmount: 50,
+            oreAmountMax: 50,
+        })
+    }
 
     app.stations.push({
         type: EntityType.Station,
