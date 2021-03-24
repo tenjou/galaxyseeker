@@ -9,12 +9,20 @@ interface App {
     miners: Miner[]
     asteroids: Asteroid[]
     stations: Station[]
+    tCurrent: number
     tEnd: number
     tDelta: number
 }
 
+enum EntityType {
+    Unknown,
+    Miner,
+    Asteroid,
+    Station,
+}
+
 type Entity = {
-    type: string
+    type: EntityType
     position: Vector2
 }
 
@@ -23,11 +31,12 @@ type MinerAIState = "idle" | "search-asteroid" | "fly-to-target" | "mining"
 type AsteroidEvent = "destroyed"
 
 type Miner = Entity & {
-    type: "miner"
+    type: EntityType.Miner
     angle: number
     speed: number
     cargoCapacity: number
     cargoCapacityMax: number
+    miningLaserCooldown: number
     ai: {
         state: MinerAIState
         target: Entity | null
@@ -36,14 +45,14 @@ type Miner = Entity & {
 }
 
 type Asteroid = Entity & {
-    type: "asteroid"
+    type: EntityType.Asteroid
     miners: Miner[]
     oreAmount: number
     oreAmountMax: number
 }
 
 type Station = Entity & {
-    type: "station"
+    type: EntityType.Station
 }
 
 const tmp = new Vector2(0, 0)
@@ -84,6 +93,7 @@ const create = (): App => {
         miners: [],
         asteroids: [],
         stations: [],
+        tCurrent: Date.now(),
         tEnd: Date.now(),
         tDelta: 0,
     }
@@ -91,12 +101,13 @@ const create = (): App => {
 
 const load = (app: App) => {
     app.miners.push({
-        type: "miner",
+        type: EntityType.Miner,
         position: new Vector2(100, 100),
         angle: 0,
         speed: 60,
         cargoCapacity: 0,
         cargoCapacityMax: 100,
+        miningLaserCooldown: 0,
         ai: {
             state: "idle",
             target: null,
@@ -104,12 +115,13 @@ const load = (app: App) => {
         },
     })
     app.miners.push({
-        type: "miner",
+        type: EntityType.Miner,
         position: new Vector2(250, 750),
         angle: 0,
         speed: 60,
         cargoCapacity: 0,
         cargoCapacityMax: 100,
+        miningLaserCooldown: 0,
         ai: {
             state: "idle",
             target: null,
@@ -118,14 +130,14 @@ const load = (app: App) => {
     })
 
     app.asteroids.push({
-        type: "asteroid",
+        type: EntityType.Asteroid,
         position: new Vector2(200, 250),
         miners: [],
         oreAmount: 50,
         oreAmountMax: 50,
     })
     app.asteroids.push({
-        type: "asteroid",
+        type: EntityType.Asteroid,
         position: new Vector2(300, 550),
         miners: [],
         oreAmount: 50,
@@ -133,7 +145,7 @@ const load = (app: App) => {
     })
 
     app.stations.push({
-        type: "station",
+        type: EntityType.Station,
         position: new Vector2(500, 500),
     })
 }
@@ -217,9 +229,8 @@ const createStationTexture = () => {
 }
 
 const render = (app: App) => {
-    const tNow = Date.now()
-    app.tDelta = (tNow - app.tEnd) / 1000
-    app.tEnd = tNow
+    app.tCurrent = Date.now()
+    app.tDelta = (app.tCurrent - app.tEnd) / 1000
 
     app.ctx.fillStyle = "#d6d6d6"
     app.ctx.fillRect(0, 0, app.width, app.height)
@@ -229,6 +240,8 @@ const render = (app: App) => {
 
     updateMiners(app)
     renderMiners(app)
+
+    app.tEnd = app.tCurrent
 }
 
 const updateMiners = (app: App) => {
@@ -276,7 +289,11 @@ const updateMinerAI = (app: App, miner: Miner) => {
         }
 
         case "mining": {
-            // console.log(miner.ai.target)
+            if (app.tCurrent < miner.miningLaserCooldown) {
+                return
+            }
+
+            miner.miningLaserCooldown = app.tCurrent + 3000
             break
         }
     }
@@ -286,7 +303,12 @@ const handleAsteroidEvent = (
     asteroid: Asteroid,
     entity: Entity,
     asteroidEvent: AsteroidEvent
-) => {}
+) => {
+    switch (entity.type) {
+        case EntityType.Miner:
+            break
+    }
+}
 
 const updateMinerFlyToTarget = (app: App, miner: Miner) => {
     const targetPosition = miner.ai.targetPosition
