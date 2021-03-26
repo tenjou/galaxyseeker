@@ -10,8 +10,10 @@ export enum EntityType {
 export type MinerAIState =
     | "idle"
     | "search-asteroid"
+    | "search-station"
     | "fly-to-target"
     | "mining"
+    | "sell"
 
 export type AsteroidEvent = "destroyed"
 

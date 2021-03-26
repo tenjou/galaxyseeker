@@ -38,7 +38,7 @@ const load = (app: App) => {
         type: EntityType.Miner,
         position: new Vector2(100, 100),
         angle: 0,
-        speed: 60,
+        speed: 160,
         cargoCapacity: 0,
         cargoCapacityMax: 100,
         tMiningLaserCooldown: 0,
