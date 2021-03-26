@@ -30,6 +30,7 @@ const create = (): App => {
         tCurrent: Date.now(),
         tEnd: Date.now(),
         tDelta: 0,
+        credits: 0,
     }
 }
 

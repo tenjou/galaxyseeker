@@ -12,6 +12,7 @@ export interface App {
     tCurrent: number
     tEnd: number
     tDelta: number
+    credits: number
 }
 
 export const subscribe = <T>(subscribers: T[], from: T) => {

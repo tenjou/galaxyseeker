@@ -95,15 +95,23 @@ const updateMinerAI = (app: App, miner: Miner) => {
                 return
             }
 
-            miner.tMiningLaserCooldown = app.tCurrent + 4000
-            miner.tMiningFinishing = app.tCurrent + 2000
+            miner.tMiningLaserCooldown = app.tCurrent + 2000
+            miner.tMiningFinishing = app.tCurrent + 1000
             break
         }
 
         case "sell": {
+            app.credits += miner.cargoCapacity
+            miner.cargoCapacity = 0
+            resetAI(miner)
             break
         }
     }
+}
+
+const resetAI = (miner: Miner) => {
+    miner.ai.state = "idle"
+    miner.ai.target = null
 }
 
 const setTarget = (miner: Miner, entityTo: Entity) => {
