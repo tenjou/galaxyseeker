@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react"
+import ReactDOM from "react-dom"
 import { App } from "./app"
 import type { Entity } from "./entity"
 import { EntityType } from "./entity"
@@ -5,8 +7,7 @@ import { Vector2 } from "./math/Vector2"
 import { updateMiners } from "./miner"
 import { randomNumber } from "./utils"
 
-const create = (): App => {
-    const canvas = document.createElement("canvas")
+const create = (canvas: HTMLCanvasElement): App => {
     const ctx = canvas.getContext("2d")
     if (!ctx) {
         throw new Error("Could not get 2d context")
@@ -229,19 +230,37 @@ const renderEntities = <T extends Entity>(
     }
 }
 
-try {
-    const app = create()
-    load(app)
+const start = (canvas: HTMLCanvasElement) => {
+    try {
+        const app = create(canvas)
+        load(app)
 
-    app.textures.miner = createMinerTexture()
-    app.textures.asteroid = createAsteroidTexture()
-    app.textures.station = createStationTexture()
+        app.textures.miner = createMinerTexture()
+        app.textures.asteroid = createAsteroidTexture()
+        app.textures.station = createStationTexture()
 
-    const renderFunc = () => {
-        render(app)
+        const renderFunc = () => {
+            render(app)
+            requestAnimationFrame(renderFunc)
+        }
         requestAnimationFrame(renderFunc)
+    } catch (err) {
+        console.error(err)
     }
-    requestAnimationFrame(renderFunc)
-} catch (err) {
-    console.error(err)
 }
+
+const AppWindow = () => {
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    useEffect(() => {
+        if (!canvasRef.current) {
+            return
+        }
+
+        start(canvasRef.current)
+    }, [canvasRef])
+
+    return <canvas ref={canvasRef} />
+}
+
+ReactDOM.render(<AppWindow />, document.getElementById("app"))
