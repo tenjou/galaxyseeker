@@ -1,5 +1,6 @@
-import { App } from "./app"
-import { Vector2 } from "./math/Vector2"
+import type { App } from "./app"
+import type { Entity } from "./entity"
+import type { Vector2 } from "./math/Vector2"
 
 export const isInside = (
     position: Vector2,
@@ -20,7 +21,11 @@ export const isInside = (
     )
 }
 
-export const getRaycastedEntity = (app: App, x: number, y: number) => {
+export const getRaycastedEntity = (
+    app: App,
+    x: number,
+    y: number
+): Entity | null => {
     for (const station of app.stations) {
         if (isInside(station.position, station.size, x, y)) {
             return station
@@ -38,4 +43,6 @@ export const getRaycastedEntity = (app: App, x: number, y: number) => {
             return asteroid
         }
     }
+
+    return null
 }

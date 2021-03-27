@@ -129,7 +129,7 @@ const setTarget = (miner: Miner, entityTo: Entity) => {
         entityTo.position.x - miner.position.x,
         entityTo.position.y - miner.position.y
     )
-    const length = tmp.length() - 30
+    const length = tmp.length() - entityTo.size - 4
     tmp.normalize()
 
     miner.ai.state = "fly-to-target"

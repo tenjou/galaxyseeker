@@ -15,6 +15,8 @@ const asteroidSpawnMax = 50
 const asteroidSpawnRate = 1000
 let tAsteroidNextSpawn = 0
 
+let selectedEntity: Entity | null = null
+
 const create = (canvas: HTMLCanvasElement): App => {
     const ctx = canvas.getContext("2d")
     if (!ctx) {
@@ -49,6 +51,9 @@ const create = (canvas: HTMLCanvasElement): App => {
         } else {
             app.canvas.style.cursor = "auto"
         }
+    })
+    window.addEventListener("mousedown", (event: MouseEvent) => {
+        selectedEntity = getRaycastedEntity(app, event.clientX, event.clientY)
     })
 
     return app
@@ -238,6 +243,8 @@ const render = (app: App) => {
     updateMiners(app)
     renderMiners(app)
 
+    renderSelected(app)
+
     app.tEnd = app.tCurrent
 }
 
@@ -291,6 +298,36 @@ const renderEntities = <T extends Entity>(
             entity.position.y - halfHeight
         )
     }
+}
+
+const renderSelected = (app: App) => {
+    if (!selectedEntity) {
+        return
+    }
+
+    const minX = selectedEntity.position.x - selectedEntity.size * 0.5 - 2
+    const minY = selectedEntity.position.y - selectedEntity.size * 0.5 - 2
+    const maxX = selectedEntity.position.x + selectedEntity.size * 0.5 + 2
+    const maxY = selectedEntity.position.y + selectedEntity.size * 0.5 + 2
+
+    app.ctx.strokeStyle = "#ffffff"
+    app.ctx.beginPath()
+    app.ctx.moveTo(minX, minY + 5)
+    app.ctx.lineTo(minX, minY)
+    app.ctx.lineTo(minX + 5, minY)
+
+    app.ctx.moveTo(minX, maxY - 5)
+    app.ctx.lineTo(minX, maxY)
+    app.ctx.lineTo(minX + 5, maxY)
+
+    app.ctx.moveTo(maxX, minY + 5)
+    app.ctx.lineTo(maxX, minY)
+    app.ctx.lineTo(maxX - 5, minY)
+
+    app.ctx.moveTo(maxX, maxY - 5)
+    app.ctx.lineTo(maxX, maxY)
+    app.ctx.lineTo(maxX - 5, maxY)
+    app.ctx.stroke()
 }
 
 const start = (canvas: HTMLCanvasElement) => {
