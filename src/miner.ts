@@ -95,7 +95,10 @@ const updateMinerAI = (app: App, miner: Miner) => {
                     if (miner.ai.target?.type === EntityType.Asteroid) {
                         mineAsteroid(app, miner.ai.target, miner)
 
-                        if (miner.cargoCapacity >= miner.cargoCapacityMax) {
+                        if (
+                            miner.ai.target &&
+                            miner.cargoCapacity >= miner.cargoCapacityMax
+                        ) {
                             miner.ai.state = "idle"
                             unsubscribe(miner.ai.target.miners, miner)
                         }
