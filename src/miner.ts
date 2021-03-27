@@ -1,5 +1,4 @@
 import type { App } from "./app"
-import { subscribe } from "./app"
 import { mineAsteroid } from "./asteroid"
 import {
     Asteroid,
@@ -41,7 +40,7 @@ const updateMinerAI = (app: App, miner: Miner) => {
                 return
             }
             setTarget(miner, asteroid)
-            subscribe(asteroid.miners, miner)
+            asteroid.miners.push(miner)
             break
         }
 

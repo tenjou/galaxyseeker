@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 import ReactDOM from "react-dom"
 import styled from "styled-components"
-import { App } from "./app"
+import { App, emit, subscribe } from "./app"
 import type { Entity } from "./entity"
-import { EntityType } from "./entity"
+import { EntityType, EntityTypeStr } from "./entity"
 import { Faction, FactionId, Factions } from "./faction"
 import { Vector2 } from "./math/Vector2"
 import { updateMiners } from "./miner"
@@ -54,6 +54,11 @@ const create = (canvas: HTMLCanvasElement): App => {
     })
     window.addEventListener("mousedown", (event: MouseEvent) => {
         selectedEntity = getRaycastedEntity(app, event.clientX, event.clientY)
+        if (selectedEntity) {
+            emit({ type: "select", entity: selectedEntity })
+        } else {
+            emit({ type: "unselect" })
+        }
     })
 
     return app
@@ -370,6 +375,7 @@ const AppWindow = () => {
         <>
             <canvas ref={canvasRef} />
             <Score />
+            <Info />
         </>
     )
 }
@@ -386,28 +392,91 @@ const Score = () => {
     }, [])
 
     return (
-        <ScoreBoard>
+        <ScorePanel>
             {factions.map((faction) => (
                 <Row key={faction.id}>
                     <Row>{faction.name}</Row>
                     <div>{faction.credits}</div>
                 </Row>
             ))}
-        </ScoreBoard>
+        </ScorePanel>
     )
 }
 
-const ScoreBoard = styled.div`
-    font-family: "Open Sans";
-    font-size: 12px;
-    padding: 5px 10px;
+const Info = () => {
+    const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null)
+
+    useEffect(() => {
+        subscribe((event) => {
+            switch (event.type) {
+                case "select":
+                    setSelectedEntity(event.entity)
+                    break
+                case "unselect":
+                    setSelectedEntity(null)
+                    break
+            }
+        })
+    }, [])
+
+    if (!selectedEntity) {
+        return null
+    }
+
+    if (selectedEntity.type === EntityType.Miner) {
+        return (
+            <InfoPanel>
+                <Row>
+                    <Row>Type</Row>
+                    {EntityTypeStr[selectedEntity.type]}
+                </Row>
+                <Row>
+                    <Row>State</Row>
+                    {selectedEntity.ai.state}
+                </Row>
+                <Row>
+                    <Row>Cargo</Row>
+                    {selectedEntity.cargoCapacity}/
+                    {selectedEntity.cargoCapacityMax}
+                </Row>
+            </InfoPanel>
+        )
+    }
+
+    return (
+        <InfoPanel>
+            <Row>
+                <Row>Type</Row>
+                {EntityTypeStr[selectedEntity.type]}
+            </Row>
+        </InfoPanel>
+    )
+}
+
+const ScorePanel = styled.div`
     position: absolute;
     top: 10px;
     right: 10px;
     width: 150px;
+    padding: 5px 10px;
     background: black;
     color: white;
     opacity: 0.6;
+    font-family: "Open Sans";
+    font-size: 12px;
+`
+
+const InfoPanel = styled.div`
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 150px;
+    padding: 5px 10px;
+    background: black;
+    color: white;
+    opacity: 0.6;
+    font-family: "Open Sans";
+    font-size: 12px;
 `
 
 const Row = styled.div`

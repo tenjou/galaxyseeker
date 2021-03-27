@@ -1,3 +1,4 @@
+import { isNumber } from "lodash"
 import type { Faction } from "./faction"
 import type { Vector2 } from "./math/Vector2"
 
@@ -7,6 +8,10 @@ export enum EntityType {
     Asteroid,
     Station,
 }
+
+export const EntityTypeStr = Object.keys(EntityType).filter((entry) =>
+    isNaN(parseInt(entry))
+)
 
 export type MinerAIState =
     | "idle"
