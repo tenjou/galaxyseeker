@@ -7,6 +7,7 @@ import {
     Entity,
     EntityType,
     Miner,
+    MinerAIState,
     Station,
 } from "./entity"
 import { Vector2 } from "./math/Vector2"
@@ -20,6 +21,26 @@ export const updateMiners = (app: App) => {
     }
 }
 
+const transitionState = (
+    miner: Miner,
+    targetState: MinerAIState,
+    target?: Entity | null
+) => {
+    if (miner.ai.state === targetState) {
+        console.error(`Miner is already at this state: ${targetState}`)
+        return
+    }
+
+    miner.ai.state = targetState
+    miner.ai.state
+
+    if (target) {
+        const targetPos = getTargetPos(miner, target)
+        miner.ai.target = target
+        miner.ai.targetPosition.copy(targetPos)
+    }
+}
+
 const updateMinerAI = (app: App, miner: Miner) => {
     switch (miner.ai.state) {
         case "idle": {
@@ -27,9 +48,9 @@ const updateMinerAI = (app: App, miner: Miner) => {
                 miner.cargoCapacity === miner.cargoCapacityMax ||
                 app.asteroids.length === 0
             ) {
-                miner.ai.state = "search-station"
+                transitionState(miner, "search-station")
             } else {
-                miner.ai.state = "search-asteroid"
+                transitionState(miner, "search-asteroid")
             }
             break
         }
@@ -37,10 +58,11 @@ const updateMinerAI = (app: App, miner: Miner) => {
         case "search-asteroid": {
             const asteroid = searchClosestAsteroid(app, miner)
             if (!asteroid) {
-                miner.ai.state = "idle"
+                transitionState(miner, "idle")
                 return
             }
-            setTarget(miner, asteroid)
+
+            transitionState(miner, "fly-to-target", asteroid)
             asteroid.miners.push(miner)
             break
         }
@@ -48,16 +70,17 @@ const updateMinerAI = (app: App, miner: Miner) => {
         case "search-station": {
             const station = searchClosestStation(app, miner)
             if (!station) {
-                miner.ai.state = "idle"
+                transitionState(miner, "idle")
                 return
             }
-            setTarget(miner, station)
+
+            transitionState(miner, "fly-to-target", station)
             break
         }
 
         case "fly-to-target": {
             if (!miner.ai.target) {
-                miner.ai.state = "idle"
+                transitionState(miner, "idle")
                 console.log("Miner is missing the target")
                 return
             }
@@ -68,11 +91,11 @@ const updateMinerAI = (app: App, miner: Miner) => {
 
             switch (miner.ai.target.type) {
                 case EntityType.Asteroid:
-                    miner.ai.state = "mining"
+                    transitionState(miner, "mining")
                     break
 
                 case EntityType.Station:
-                    miner.ai.state = "sell"
+                    transitionState(miner, "sell")
                     break
 
                 default:
@@ -99,8 +122,9 @@ const updateMinerAI = (app: App, miner: Miner) => {
                             miner.ai.target &&
                             miner.cargoCapacity >= miner.cargoCapacityMax
                         ) {
-                            miner.ai.state = "idle"
                             unsubscribe(miner.ai.target.miners, miner)
+                            transitionState(miner, "idle")
+                            miner.ai.target = null
                         }
                     }
                 }
@@ -115,24 +139,14 @@ const updateMinerAI = (app: App, miner: Miner) => {
         case "sell": {
             miner.faction.credits += miner.cargoCapacity
             miner.cargoCapacity = 0
-            resetAI(miner)
+            transitionState(miner, "idle")
             StationService.updateListeners(app)
             break
         }
     }
 }
 
-const resetAI = (miner: Miner) => {
-    miner.ai.state = "idle"
-    miner.ai.target = null
-}
-
-const setTarget = (miner: Miner, entityTo: Entity) => {
-    if (miner.ai.target) {
-        console.error("Miner should not have target active")
-        return
-    }
-
+const getTargetPos = (miner: Miner, entityTo: Entity) => {
     tmp.set(
         entityTo.position.x - miner.position.x,
         entityTo.position.y - miner.position.y
@@ -140,12 +154,11 @@ const setTarget = (miner: Miner, entityTo: Entity) => {
     const length = tmp.length() - entityTo.size - 4
     tmp.normalize()
 
-    miner.ai.state = "fly-to-target"
-    miner.ai.target = entityTo
-    miner.ai.targetPosition.set(
-        miner.position.x + tmp.x * length,
-        miner.position.y + tmp.y * length
-    )
+    const targetX = miner.position.x + tmp.x * length
+    const targetY = miner.position.y + tmp.y * length
+    tmp.set(targetX, targetY)
+
+    return tmp
 }
 
 const updateMinerFlyToTarget = (app: App, miner: Miner) => {
