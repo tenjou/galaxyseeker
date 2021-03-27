@@ -8,6 +8,7 @@ export const mineAsteroid = (app: App, asteroid: Asteroid, miner: Miner) => {
     const minedAmount = Math.min(asteroid.oreAmount, miningStrength)
     asteroid.oreAmount -= minedAmount
     miner.cargoCapacity += minedAmount
+    emit(miner, "updated")
 
     if (asteroid.oreAmount <= 0) {
         destroyAsteroid(app, asteroid)
