@@ -1,14 +1,15 @@
 import type { App } from "./app"
-import { unsubscribe } from "./app"
 import { mineAsteroid } from "./asteroid"
 import {
     Asteroid,
-    AsteroidEvent,
     Entity,
     EntityType,
+    EntityEvent,
     Miner,
     MinerAIState,
     Station,
+    subscribe,
+    unsubscribe,
 } from "./entity"
 import { Vector2 } from "./math/Vector2"
 import StationService from "./station"
@@ -38,6 +39,7 @@ const transitionState = (
         const targetPos = getTargetPos(miner, target)
         miner.ai.target = target
         miner.ai.targetPosition.copy(targetPos)
+        subscribe(target, miner, handleAsteroidEvent)
     }
 }
 
@@ -63,7 +65,6 @@ const updateMinerAI = (app: App, miner: Miner) => {
             }
 
             transitionState(miner, "fly-to-target", asteroid)
-            asteroid.miners.push(miner)
             break
         }
 
@@ -122,7 +123,7 @@ const updateMinerAI = (app: App, miner: Miner) => {
                             miner.ai.target &&
                             miner.cargoCapacity >= miner.cargoCapacityMax
                         ) {
-                            unsubscribe(miner.ai.target.miners, miner)
+                            unsubscribe(miner.ai.target, miner)
                             transitionState(miner, "idle")
                             miner.ai.target = null
                         }
@@ -192,10 +193,13 @@ const searchClosestAsteroid = (app: App, miner: Miner): Asteroid | null => {
             asteroid.position.x,
             asteroid.position.y
         )
-        if (distance < closestDistance && asteroid.miners.length <= numMiners) {
+        if (
+            distance < closestDistance &&
+            asteroid.subscribers.length <= numMiners
+        ) {
             closestDistance = distance
             closestAsteroid = asteroid
-            numMiners = asteroid.miners.length
+            numMiners = asteroid.subscribers.length
         }
     }
 
@@ -221,14 +225,18 @@ const searchClosestStation = (app: App, miner: Miner): Station | null => {
 }
 
 export const handleAsteroidEvent = (
-    asteroid: Asteroid,
-    miner: Miner,
-    asteroidEvent: AsteroidEvent
+    asteroid: Entity,
+    miner: Entity,
+    event: EntityEvent
 ) => {
-    switch (asteroidEvent) {
+    if (miner.type !== EntityType.Miner) {
+        console.error(`Unexpected type: ${miner.type}`)
+        return
+    }
+
+    switch (event) {
         case "destroyed":
-            miner.ai.state = "idle"
-            miner.ai.target = null
+            transitionState(miner, "idle", null)
             miner.tMiningFinishing = 0
             break
     }

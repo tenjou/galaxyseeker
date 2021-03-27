@@ -1,6 +1,6 @@
 import type { App } from "./app"
 import type { Asteroid, Miner } from "./entity"
-import { handleAsteroidEvent } from "./miner"
+import { emit } from "./entity"
 
 export const mineAsteroid = (app: App, asteroid: Asteroid, miner: Miner) => {
     const minerCargoLeft = miner.cargoCapacityMax - miner.cargoCapacity
@@ -23,9 +23,7 @@ const destroyAsteroid = (app: App, asteroid: Asteroid) => {
     app.asteroids[index] = app.asteroids[app.asteroids.length - 1]
     app.asteroids.pop()
 
-    for (const miner of asteroid.miners) {
-        handleAsteroidEvent(asteroid, miner, "destroyed")
-    }
+    emit(asteroid, "destroyed")
 
-    asteroid.miners.length = 0
+    asteroid.subscribers.length = 0
 }

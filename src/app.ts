@@ -40,17 +40,3 @@ export const emit = (event: GlobalEvent) => {
         subscriber(event)
     }
 }
-
-export const unsubscribe = <T>(subscribers: T[], from: T) => {
-    const index = subscribers.indexOf(from)
-    if (index === -1) {
-        return
-    }
-
-    if (subscribers.length === 1) {
-        subscribers.length = 0
-        return
-    }
-
-    subscribers.splice(index, 1)
-}
