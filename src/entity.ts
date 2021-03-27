@@ -23,6 +23,7 @@ export type Miner = {
     position: Vector2
     angle: number
     speed: number
+    size: number
     cargoCapacity: number
     cargoCapacityMax: number
     tMiningLaserCooldown: number
@@ -38,6 +39,7 @@ export type Miner = {
 export type Asteroid = {
     type: EntityType.Asteroid
     position: Vector2
+    size: number
     miners: Miner[]
     oreAmount: number
     oreAmountMax: number
@@ -46,6 +48,7 @@ export type Asteroid = {
 export type Station = {
     type: EntityType.Station
     position: Vector2
+    size: number
 }
 
 export type Entity = Miner | Asteroid | Station

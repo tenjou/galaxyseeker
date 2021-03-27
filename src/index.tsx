@@ -4,11 +4,12 @@ import styled from "styled-components"
 import { App } from "./app"
 import type { Entity } from "./entity"
 import { EntityType } from "./entity"
-import { Faction, Factions, FactionId } from "./faction"
+import { Faction, FactionId, Factions } from "./faction"
 import { Vector2 } from "./math/Vector2"
 import { updateMiners } from "./miner"
-import { randomNumber } from "./utils"
+import { getRaycastedEntity } from "./physics"
 import StationService from "./station"
+import { randomNumber } from "./utils"
 
 const asteroidSpawnMax = 50
 const asteroidSpawnRate = 1000
@@ -26,7 +27,7 @@ const create = (canvas: HTMLCanvasElement): App => {
     canvas.height = height
     document.body.appendChild(canvas)
 
-    return {
+    const app: App = {
         canvas,
         ctx,
         textures: {},
@@ -40,6 +41,17 @@ const create = (canvas: HTMLCanvasElement): App => {
         tDelta: 0,
         factions: [],
     }
+
+    window.addEventListener("mousemove", (event: MouseEvent) => {
+        const entity = getRaycastedEntity(app, event.clientX, event.clientY)
+        if (entity) {
+            app.canvas.style.cursor = "pointer"
+        } else {
+            app.canvas.style.cursor = "auto"
+        }
+    })
+
+    return app
 }
 
 const loadFaction = (app: App, id: FactionId, name: string) => {
@@ -68,6 +80,7 @@ const loadMiners = (app: App, faction: Faction) => {
             position: new Vector2(x, y),
             angle: 0,
             speed: 160,
+            size: Math.max(faction.texture.width, faction.texture.height),
             cargoCapacity: 0,
             cargoCapacityMax: 100,
             tMiningLaserCooldown: 0,
@@ -95,9 +108,11 @@ const load = (app: App) => {
         spawnAsteroid(app)
     }
 
+    const stationTexture = app.textures.station
     app.stations.push({
         type: EntityType.Station,
         position: new Vector2(app.width * 0.5, app.height * 0.5),
+        size: Math.max(stationTexture.width, stationTexture.height),
     })
 
     StationService.updateListeners(app)
@@ -106,10 +121,12 @@ const load = (app: App) => {
 const spawnAsteroid = (app: App) => {
     const x = randomNumber(0, app.width)
     const y = randomNumber(0, app.height)
+    const texture = app.textures.asteroid
 
     app.asteroids.push({
         type: EntityType.Asteroid,
         position: new Vector2(x, y),
+        size: Math.max(texture.width, texture.height),
         miners: [],
         oreAmount: 50,
         oreAmountMax: 50,
