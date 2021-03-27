@@ -10,6 +10,7 @@ import {
     Station,
     subscribe,
     unsubscribe,
+    emit,
 } from "./entity"
 import { Vector2 } from "./math/Vector2"
 import StationService from "./station"
@@ -28,7 +29,7 @@ const transitionState = (
     target?: Entity | null
 ) => {
     if (miner.ai.state === targetState) {
-        console.error(`Miner is already at this state: ${targetState}`)
+        console.warn(`Miner is already at this state: ${targetState}`)
         return
     }
 
@@ -41,6 +42,8 @@ const transitionState = (
         miner.ai.targetPosition.copy(targetPos)
         subscribe(target, miner, handleAsteroidEvent)
     }
+
+    emit(miner, "updated")
 }
 
 const updateMinerAI = (app: App, miner: Miner) => {

@@ -11,6 +11,8 @@ export const mineAsteroid = (app: App, asteroid: Asteroid, miner: Miner) => {
 
     if (asteroid.oreAmount <= 0) {
         destroyAsteroid(app, asteroid)
+    } else {
+        emit(asteroid, "updated")
     }
 }
 

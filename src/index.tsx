@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 import ReactDOM from "react-dom"
 import styled from "styled-components"
-import { App, emit, subscribe } from "./app"
-import type { Entity } from "./entity"
-import { EntityType, EntityTypeStr } from "./entity"
+import { App, emitGlobal, subscribeGlobal } from "./app"
+import type { Entity, Station } from "./entity"
+import { EntityType, EntityTypeStr, subscribe } from "./entity"
 import { Faction, FactionId, Factions } from "./faction"
 import { Vector2 } from "./math/Vector2"
 import { updateMiners } from "./miner"
@@ -16,6 +16,14 @@ const asteroidSpawnRate = 1000
 let tAsteroidNextSpawn = 0
 
 let selectedEntity: Entity | null = null
+
+const fakeEntity: Station = {
+    type: EntityType.Station,
+    position: new Vector2(0, 0),
+    children: null,
+    size: 0,
+    subscribers: [],
+}
 
 const create = (canvas: HTMLCanvasElement): App => {
     const ctx = canvas.getContext("2d")
@@ -55,9 +63,9 @@ const create = (canvas: HTMLCanvasElement): App => {
     window.addEventListener("mousedown", (event: MouseEvent) => {
         selectedEntity = getRaycastedEntity(app, event.clientX, event.clientY)
         if (selectedEntity) {
-            emit({ type: "select", entity: selectedEntity })
+            emitGlobal({ type: "select", entity: selectedEntity })
         } else {
-            emit({ type: "unselect" })
+            emitGlobal({ type: "unselect" })
         }
     })
 
@@ -407,12 +415,23 @@ const Score = () => {
 
 const Info = () => {
     const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null)
+    const [, setUpdated] = useState(0)
 
     useEffect(() => {
-        subscribe((event) => {
+        subscribeGlobal((event) => {
             switch (event.type) {
                 case "select":
                     setSelectedEntity(event.entity)
+                    subscribe(event.entity, fakeEntity, (from, to, event) => {
+                        switch (event) {
+                            case "destroyed":
+                                setSelectedEntity(null)
+                                break
+                            default:
+                                setUpdated(Date.now())
+                                break
+                        }
+                    })
                     break
                 case "unselect":
                     setSelectedEntity(null)

@@ -31,11 +31,11 @@ type SubscribeFunc = (event: GlobalEvent) => void
 
 const subscribers: SubscribeFunc[] = []
 
-export const subscribe = (func: SubscribeFunc) => {
+export const subscribeGlobal = (func: SubscribeFunc) => {
     subscribers.push(func)
 }
 
-export const emit = (event: GlobalEvent) => {
+export const emitGlobal = (event: GlobalEvent) => {
     for (const subscriber of subscribers) {
         subscriber(event)
     }
