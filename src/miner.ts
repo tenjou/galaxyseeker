@@ -22,7 +22,10 @@ export const updateMiners = (app: App) => {
 const updateMinerAI = (app: App, miner: Miner) => {
     switch (miner.ai.state) {
         case "idle": {
-            if (miner.cargoCapacity === miner.cargoCapacityMax) {
+            if (
+                miner.cargoCapacity === miner.cargoCapacityMax ||
+                app.asteroids.length === 0
+            ) {
                 miner.ai.state = "search-station"
             } else {
                 miner.ai.state = "search-asteroid"
@@ -130,8 +133,8 @@ const setTarget = (miner: Miner, entityTo: Entity) => {
     miner.ai.state = "fly-to-target"
     miner.ai.target = entityTo
     miner.ai.targetPosition.set(
-        (miner.position.x + tmp.x * length) | 0,
-        (miner.position.y + tmp.y * length) | 0
+        miner.position.x + tmp.x * length,
+        miner.position.y + tmp.y * length
     )
 }
 

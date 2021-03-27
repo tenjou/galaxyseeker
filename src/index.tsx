@@ -81,10 +81,10 @@ const load = (app: App) => {
     const argonFaction = loadFaction(app, "argon", "Argon")
 
     loadMiners(app, terranFaction)
-    // loadMiners(app, xenonFaction)
-    // loadMiners(app, argonFaction)
+    loadMiners(app, xenonFaction)
+    loadMiners(app, argonFaction)
 
-    for (let n = 0; n < 1; n++) {
+    for (let n = 0; n < 50; n++) {
         const x = randomNumber(0, app.width)
         const y = randomNumber(0, app.height)
         app.asteroids.push({
