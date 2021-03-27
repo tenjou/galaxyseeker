@@ -10,6 +10,10 @@ import { updateMiners } from "./miner"
 import { randomNumber } from "./utils"
 import StationService from "./station"
 
+const asteroidSpawnMax = 50
+const asteroidSpawnRate = 1000
+let tAsteroidNextSpawn = 0
+
 const create = (canvas: HTMLCanvasElement): App => {
     const ctx = canvas.getContext("2d")
     if (!ctx) {
@@ -17,7 +21,7 @@ const create = (canvas: HTMLCanvasElement): App => {
     }
 
     const width = window.innerWidth
-    const height = window.innerHeight
+    const height = window.innerHeight - (window.innerHeight % 2)
     canvas.width = width
     canvas.height = height
     document.body.appendChild(canvas)
@@ -87,25 +91,29 @@ const load = (app: App) => {
     loadMiners(app, xenonFaction)
     loadMiners(app, argonFaction)
 
-    for (let n = 0; n < 50; n++) {
-        const x = randomNumber(0, app.width)
-        const y = randomNumber(0, app.height)
-
-        app.asteroids.push({
-            type: EntityType.Asteroid,
-            position: new Vector2(x, y),
-            miners: [],
-            oreAmount: 50,
-            oreAmountMax: 50,
-        })
+    for (let n = 0; n < asteroidSpawnMax; n++) {
+        spawnAsteroid(app)
     }
 
     app.stations.push({
         type: EntityType.Station,
-        position: new Vector2(app.width * 0.5, app.width * 0.5),
+        position: new Vector2(app.width * 0.5, app.height * 0.5),
     })
 
     StationService.updateListeners(app)
+}
+
+const spawnAsteroid = (app: App) => {
+    const x = randomNumber(0, app.width)
+    const y = randomNumber(0, app.height)
+
+    app.asteroids.push({
+        type: EntityType.Asteroid,
+        position: new Vector2(x, y),
+        miners: [],
+        oreAmount: 50,
+        oreAmountMax: 50,
+    })
 }
 
 const createMinerTexture = (colorHex: string) => {
@@ -188,12 +196,24 @@ const createStationTexture = () => {
     return canvas
 }
 
+const updateAsteroidRespawner = (app: App) => {
+    if (
+        tAsteroidNextSpawn <= app.tCurrent &&
+        app.asteroids.length < asteroidSpawnMax
+    ) {
+        tAsteroidNextSpawn = app.tCurrent + asteroidSpawnRate
+        spawnAsteroid(app)
+    }
+}
+
 const render = (app: App) => {
     app.tCurrent = Date.now()
     app.tDelta = (app.tCurrent - app.tEnd) / 1000
 
     app.ctx.fillStyle = "#d6d6d6"
     app.ctx.fillRect(0, 0, app.width, app.height)
+
+    updateAsteroidRespawner(app)
 
     renderEntities(app, app.asteroids, app.textures.asteroid)
     renderEntities(app, app.stations, app.textures.station)
