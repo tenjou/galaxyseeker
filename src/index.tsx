@@ -480,7 +480,7 @@ const ScorePanel = styled.div`
     padding: 5px 10px;
     background: black;
     color: white;
-    opacity: 0.6;
+    opacity: 0.7;
     font-family: "Open Sans";
     font-size: 12px;
 `
@@ -493,7 +493,7 @@ const InfoPanel = styled.div`
     padding: 5px 10px;
     background: black;
     color: white;
-    opacity: 0.6;
+    opacity: 0.7;
     font-family: "Open Sans";
     font-size: 12px;
 `
