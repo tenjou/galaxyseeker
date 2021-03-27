@@ -1,4 +1,5 @@
 import type { App } from "./app"
+import { unsubscribe } from "./app"
 import { mineAsteroid } from "./asteroid"
 import {
     Asteroid,
@@ -93,6 +94,11 @@ const updateMinerAI = (app: App, miner: Miner) => {
 
                     if (miner.ai.target?.type === EntityType.Asteroid) {
                         mineAsteroid(app, miner.ai.target, miner)
+
+                        if (miner.cargoCapacity >= miner.cargoCapacityMax) {
+                            miner.ai.state = "idle"
+                            unsubscribe(miner.ai.target.miners, miner)
+                        }
                     }
                 }
                 return

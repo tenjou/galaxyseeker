@@ -431,13 +431,32 @@ const Info = () => {
                     {EntityTypeStr[selectedEntity.type]}
                 </Row>
                 <Row>
-                    <Row>State</Row>
-                    {selectedEntity.ai.state}
+                    <Row>Faction</Row>
+                    {selectedEntity.faction.name}
                 </Row>
                 <Row>
                     <Row>Cargo</Row>
                     {selectedEntity.cargoCapacity}/
                     {selectedEntity.cargoCapacityMax}
+                </Row>
+                <Row>
+                    <Row>State</Row>
+                    {selectedEntity.ai.state}
+                </Row>
+            </InfoPanel>
+        )
+    }
+
+    if (selectedEntity.type === EntityType.Asteroid) {
+        return (
+            <InfoPanel>
+                <Row>
+                    <Row>Type</Row>
+                    {EntityTypeStr[selectedEntity.type]}
+                </Row>
+                <Row>
+                    <Row>Ore</Row>
+                    {selectedEntity.oreAmount}/{selectedEntity.oreAmountMax}
                 </Row>
             </InfoPanel>
         )
