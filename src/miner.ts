@@ -130,8 +130,8 @@ const setTarget = (miner: Miner, entityTo: Entity) => {
     miner.ai.state = "fly-to-target"
     miner.ai.target = entityTo
     miner.ai.targetPosition.set(
-        miner.position.x + tmp.x * length,
-        miner.position.y + tmp.y * length
+        (miner.position.x + tmp.x * length) | 0,
+        (miner.position.y + tmp.y * length) | 0
     )
 }
 
@@ -199,9 +199,9 @@ export const handleAsteroidEvent = (
 ) => {
     switch (asteroidEvent) {
         case "destroyed":
-            unsubscribe(asteroid.miners, miner)
             miner.ai.state = "idle"
             miner.ai.target = null
+            miner.tMiningFinishing = 0
             break
     }
 }

@@ -26,4 +26,6 @@ const destroyAsteroid = (app: App, asteroid: Asteroid) => {
     for (const miner of asteroid.miners) {
         handleAsteroidEvent(asteroid, miner, "destroyed")
     }
+
+    asteroid.miners.length = 0
 }

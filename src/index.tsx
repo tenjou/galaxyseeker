@@ -3,6 +3,7 @@ import ReactDOM from "react-dom"
 import { App } from "./app"
 import type { Entity } from "./entity"
 import { EntityType } from "./entity"
+import { Faction, FactionId } from "./faction"
 import { Vector2 } from "./math/Vector2"
 import { updateMiners } from "./miner"
 import { randomNumber } from "./utils"
@@ -32,44 +33,60 @@ const create = (canvas: HTMLCanvasElement): App => {
         tEnd: Date.now(),
         tDelta: 0,
         credits: 0,
+        factions: {},
+    }
+}
+
+const loadFaction = (app: App, id: FactionId, name: string) => {
+    const faction = {
+        id,
+        name,
+        credits: 0,
+        texture: app.textures["miner_" + id],
+    }
+    app.factions[id] = faction
+
+    return faction
+}
+
+const loadMiners = (app: App, faction: Faction) => {
+    const numFactionMiners = 2
+
+    for (let n = 0; n < numFactionMiners; n++) {
+        const x = randomNumber(0, app.width)
+        const y = randomNumber(0, app.height)
+
+        app.miners.push({
+            type: EntityType.Miner,
+            position: new Vector2(x, y),
+            angle: 0,
+            speed: 160,
+            cargoCapacity: 0,
+            cargoCapacityMax: 100,
+            tMiningLaserCooldown: 0,
+            tMiningFinishing: 0,
+            faction,
+            ai: {
+                state: "idle",
+                target: null,
+                targetPosition: new Vector2(0, 0),
+            },
+        })
     }
 }
 
 const load = (app: App) => {
-    app.miners.push({
-        type: EntityType.Miner,
-        position: new Vector2(100, 100),
-        angle: 0,
-        speed: 160,
-        cargoCapacity: 0,
-        cargoCapacityMax: 100,
-        tMiningLaserCooldown: 0,
-        tMiningFinishing: 0,
-        ai: {
-            state: "idle",
-            target: null,
-            targetPosition: new Vector2(0, 0),
-        },
-    })
-    // app.miners.push({
-    //     type: EntityType.Miner,
-    //     position: new Vector2(250, 750),
-    //     angle: 0,
-    //     speed: 60,
-    //     cargoCapacity: 0,
-    //     cargoCapacityMax: 100,
-    //     tMiningLaserCooldown: 0,
-    //     tMiningFinishing: 0,
-    //     ai: {
-    //         state: "idle",
-    //         target: null,
-    //         targetPosition: new Vector2(0, 0),
-    //     },
-    // })
+    const terranFaction = loadFaction(app, "terran", "Terran")
+    const xenonFaction = loadFaction(app, "xenon", "Xenon")
+    const argonFaction = loadFaction(app, "argon", "Argon")
 
-    for (let n = 0; n < 10; n++) {
-        const x = randomNumber(0, 1000)
-        const y = randomNumber(0, 900)
+    loadMiners(app, terranFaction)
+    // loadMiners(app, xenonFaction)
+    // loadMiners(app, argonFaction)
+
+    for (let n = 0; n < 1; n++) {
+        const x = randomNumber(0, app.width)
+        const y = randomNumber(0, app.height)
         app.asteroids.push({
             type: EntityType.Asteroid,
             position: new Vector2(x, y),
@@ -81,11 +98,11 @@ const load = (app: App) => {
 
     app.stations.push({
         type: EntityType.Station,
-        position: new Vector2(500, 500),
+        position: new Vector2(app.width * 0.5, app.width * 0.5),
     })
 }
 
-const createMinerTexture = () => {
+const createMinerTexture = (colorHex: string) => {
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")
     if (!ctx) {
@@ -97,17 +114,17 @@ const createMinerTexture = () => {
     canvas.width = width
     canvas.height = height
 
-    ctx.fillStyle = "#ff0000"
+    ctx.fillStyle = colorHex
     ctx.strokeStyle = "#000"
-    ctx.lineWidth = 2
+    ctx.lineWidth = 1
 
     ctx.beginPath()
     ctx.moveTo(2, height - 2)
     ctx.lineTo(width - 2, height - 2)
     ctx.lineTo(width * 0.5, 2)
     ctx.closePath()
-    ctx.stroke()
     ctx.fill()
+    ctx.stroke()
 
     return canvas
 }
@@ -125,12 +142,13 @@ const createAsteroidTexture = () => {
 
     ctx.fillStyle = "brown"
     ctx.strokeStyle = "#000"
-    ctx.lineWidth = 2
+    ctx.lineWidth = 1
 
+    ctx.translate(0.5, 0.5)
     ctx.beginPath()
     ctx.arc(radius, radius, radius - 2, 0, 2 * Math.PI)
-    ctx.stroke()
     ctx.fill()
+    ctx.stroke()
 
     return canvas
 }
@@ -149,16 +167,17 @@ const createStationTexture = () => {
 
     ctx.fillStyle = "orange"
     ctx.strokeStyle = "#000"
-    ctx.lineWidth = 2
+    ctx.lineWidth = 1
 
+    ctx.translate(0.5, 0.5)
     ctx.beginPath()
     ctx.moveTo(2, 2)
     ctx.lineTo(width - 2, 2)
     ctx.lineTo(width - 2, height - 2)
     ctx.lineTo(2, height - 2)
     ctx.closePath()
-    ctx.stroke()
     ctx.fill()
+    ctx.stroke()
 
     return canvas
 }
@@ -180,9 +199,9 @@ const render = (app: App) => {
 }
 
 const renderMiners = (app: App) => {
-    const minerTexture = app.textures.miner
-
     for (const miner of app.miners) {
+        const minerTexture = miner.faction.texture
+
         app.ctx.translate(miner.position.x, miner.position.y)
         app.ctx.rotate(miner.angle)
         app.ctx.translate(-miner.position.x, -miner.position.y)
@@ -195,6 +214,7 @@ const renderMiners = (app: App) => {
         app.ctx.setTransform(1, 0, 0, 1, 0, 0)
 
         if (
+            miner.ai.state === "mining" &&
             miner.ai.target &&
             miner.tMiningFinishing > 0 &&
             miner.tMiningFinishing > app.tCurrent
@@ -233,11 +253,14 @@ const renderEntities = <T extends Entity>(
 const start = (canvas: HTMLCanvasElement) => {
     try {
         const app = create(canvas)
-        load(app)
 
-        app.textures.miner = createMinerTexture()
+        app.textures.miner_terran = createMinerTexture("#2196f3")
+        app.textures.miner_xenon = createMinerTexture("#f44336")
+        app.textures.miner_argon = createMinerTexture("#8bc34a")
         app.textures.asteroid = createAsteroidTexture()
         app.textures.station = createStationTexture()
+
+        load(app)
 
         const renderFunc = () => {
             render(app)

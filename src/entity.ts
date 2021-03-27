@@ -1,3 +1,4 @@
+import type { Faction } from "./faction"
 import type { Vector2 } from "./math/Vector2"
 
 export enum EntityType {
@@ -26,6 +27,7 @@ export type Miner = {
     cargoCapacityMax: number
     tMiningLaserCooldown: number
     tMiningFinishing: number
+    faction: Faction
     ai: {
         state: MinerAIState
         target: Entity | null

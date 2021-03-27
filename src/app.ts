@@ -1,4 +1,5 @@
 import type { Asteroid, Miner, Station } from "./entity"
+import type { Factions } from "./faction"
 
 export interface App {
     canvas: HTMLElement
@@ -13,6 +14,7 @@ export interface App {
     tEnd: number
     tDelta: number
     credits: number
+    factions: Factions
 }
 
 export const subscribe = <T>(subscribers: T[], from: T) => {
@@ -25,6 +27,10 @@ export const unsubscribe = <T>(subscribers: T[], from: T) => {
         return
     }
 
-    subscribers[index] = subscribers[subscribers.length - 1]
-    subscribers.pop()
+    if (subscribers.length === 1) {
+        subscribers.length = 0
+        return
+    }
+
+    subscribers.splice(index, 1)
 }
