@@ -83,9 +83,10 @@ const loadMiners = (app: App, faction: Faction) => {
         app.miners.push({
             type: EntityType.Miner,
             position: new Vector2(x, y),
+            size: Math.max(faction.texture.width, faction.texture.height),
+            children: null,
             angle: 0,
             speed: 160,
-            size: Math.max(faction.texture.width, faction.texture.height),
             cargoCapacity: 0,
             cargoCapacityMax: 100,
             tMiningLaserCooldown: 0,
@@ -118,6 +119,7 @@ const load = (app: App) => {
         type: EntityType.Station,
         position: new Vector2(app.width * 0.5, app.height * 0.5),
         size: Math.max(stationTexture.width, stationTexture.height),
+        children: null,
     })
 
     StationService.updateListeners(app)
@@ -132,6 +134,7 @@ const spawnAsteroid = (app: App) => {
         type: EntityType.Asteroid,
         position: new Vector2(x, y),
         size: Math.max(texture.width, texture.height),
+        children: null,
         miners: [],
         oreAmount: 50,
         oreAmountMax: 50,

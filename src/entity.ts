@@ -18,12 +18,17 @@ export type MinerAIState =
 
 export type AsteroidEvent = "destroyed"
 
-export type Miner = {
-    type: EntityType.Miner
+interface EntityBase {
+    type: EntityType
     position: Vector2
+    size: number
+    children: Entity[] | null
+}
+
+export interface Miner extends EntityBase {
+    type: EntityType.Miner
     angle: number
     speed: number
-    size: number
     cargoCapacity: number
     cargoCapacityMax: number
     tMiningLaserCooldown: number
@@ -36,19 +41,15 @@ export type Miner = {
     }
 }
 
-export type Asteroid = {
+export interface Asteroid extends EntityBase {
     type: EntityType.Asteroid
-    position: Vector2
-    size: number
     miners: Miner[]
     oreAmount: number
     oreAmountMax: number
 }
 
-export type Station = {
+export interface Station extends EntityBase {
     type: EntityType.Station
-    position: Vector2
-    size: number
 }
 
 export type Entity = Miner | Asteroid | Station
