@@ -162,15 +162,18 @@ const updateMinerFlyToTarget = (app: App, miner: Miner) => {
 const searchClosestAsteroid = (app: App, miner: Miner): Asteroid | null => {
     let closestDistance: number = Number.MAX_SAFE_INTEGER
     let closestAsteroid: Asteroid | null = null
+    let numMiners = Number.MAX_SAFE_INTEGER
 
     for (const asteroid of app.asteroids) {
         const distance = miner.position.distance(
             asteroid.position.x,
             asteroid.position.y
         )
-        if (distance < closestDistance) {
+        if (distance < closestDistance && asteroid.miners.length <= numMiners) {
             closestDistance = distance
             closestAsteroid = asteroid
+            numMiners = asteroid.miners.length
+            console.log(numMiners)
         }
     }
 
