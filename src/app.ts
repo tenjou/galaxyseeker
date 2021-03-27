@@ -13,7 +13,6 @@ export interface App {
     tCurrent: number
     tEnd: number
     tDelta: number
-    credits: number
     factions: Factions
 }
 

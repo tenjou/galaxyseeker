@@ -1,5 +1,5 @@
 import type { App } from "./app"
-import { subscribe, unsubscribe } from "./app"
+import { subscribe } from "./app"
 import { mineAsteroid } from "./asteroid"
 import {
     Asteroid,
@@ -10,6 +10,7 @@ import {
     Station,
 } from "./entity"
 import { Vector2 } from "./math/Vector2"
+import StationService from "./station"
 
 const tmp = new Vector2(0, 0)
 
@@ -104,9 +105,10 @@ const updateMinerAI = (app: App, miner: Miner) => {
         }
 
         case "sell": {
-            app.credits += miner.cargoCapacity
+            miner.faction.credits += miner.cargoCapacity
             miner.cargoCapacity = 0
             resetAI(miner)
+            StationService.updateListeners(app)
             break
         }
     }
@@ -173,7 +175,6 @@ const searchClosestAsteroid = (app: App, miner: Miner): Asteroid | null => {
             closestDistance = distance
             closestAsteroid = asteroid
             numMiners = asteroid.miners.length
-            console.log(numMiners)
         }
     }
 

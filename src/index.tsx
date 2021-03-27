@@ -1,12 +1,14 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import ReactDOM from "react-dom"
+import styled from "styled-components"
 import { App } from "./app"
 import type { Entity } from "./entity"
 import { EntityType } from "./entity"
-import { Faction, FactionId } from "./faction"
+import { Faction, Factions, FactionId } from "./faction"
 import { Vector2 } from "./math/Vector2"
 import { updateMiners } from "./miner"
 import { randomNumber } from "./utils"
+import StationService from "./station"
 
 const create = (canvas: HTMLCanvasElement): App => {
     const ctx = canvas.getContext("2d")
@@ -32,19 +34,20 @@ const create = (canvas: HTMLCanvasElement): App => {
         tCurrent: Date.now(),
         tEnd: Date.now(),
         tDelta: 0,
-        credits: 0,
-        factions: {},
+        factions: [],
     }
 }
 
 const loadFaction = (app: App, id: FactionId, name: string) => {
+    const index = app.factions.length
     const faction = {
         id,
+        index,
         name,
         credits: 0,
         texture: app.textures["miner_" + id],
     }
-    app.factions[id] = faction
+    app.factions.push(faction)
 
     return faction
 }
@@ -87,6 +90,7 @@ const load = (app: App) => {
     for (let n = 0; n < 50; n++) {
         const x = randomNumber(0, app.width)
         const y = randomNumber(0, app.height)
+
         app.asteroids.push({
             type: EntityType.Asteroid,
             position: new Vector2(x, y),
@@ -100,6 +104,8 @@ const load = (app: App) => {
         type: EntityType.Station,
         position: new Vector2(app.width * 0.5, app.width * 0.5),
     })
+
+    StationService.updateListeners(app)
 }
 
 const createMinerTexture = (colorHex: string) => {
@@ -283,7 +289,53 @@ const AppWindow = () => {
         start(canvasRef.current)
     }, [canvasRef])
 
-    return <canvas ref={canvasRef} />
+    return (
+        <>
+            <canvas ref={canvasRef} />
+            <Score />
+        </>
+    )
 }
+
+const Score = () => {
+    const [factions, setFactions] = useState<Factions>([])
+
+    useEffect(() => {
+        const func = StationService.addListener((app: App) =>
+            setFactions([...app.factions])
+        )
+
+        return () => StationService.removeListener(func)
+    }, [])
+
+    return (
+        <ScoreBoard>
+            {factions.map((faction) => (
+                <Row key={faction.id}>
+                    <Row>{faction.name}</Row>
+                    <div>{faction.credits}</div>
+                </Row>
+            ))}
+        </ScoreBoard>
+    )
+}
+
+const ScoreBoard = styled.div`
+    font-family: "Open Sans";
+    font-size: 12px;
+    padding: 5px 10px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 150px;
+    background: black;
+    color: white;
+    opacity: 0.6;
+`
+
+const Row = styled.div`
+    display: flex;
+    flex: 1;
+`
 
 ReactDOM.render(<AppWindow />, document.getElementById("app"))
